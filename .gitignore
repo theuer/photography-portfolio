@@ -1,0 +1,13 @@
+# Personal data — never commit
+data/projects.json
+images/
+
+# macOS
+.DS_Store
+**/.DS_Store
+
+# Claude Code local settings (machine-specific permissions)
+.claude/settings.local.json
+
+# Node (local dev server)
+node_modules/

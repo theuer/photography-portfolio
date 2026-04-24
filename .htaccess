@@ -1,0 +1,10 @@
+RewriteEngine On
+
+# /work/project-id → project.html
+RewriteRule ^work/([^/]+)$ /project.html [L]
+
+# /about → about.html
+RewriteRule ^about$ /about.html [L]
+
+# /admin → admin.html
+RewriteRule ^admin$ /admin.html [L]

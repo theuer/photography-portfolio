@@ -1,0 +1,9 @@
+{
+  "directoryListing": false,
+  "rewrites": [
+    { "source": "/", "destination": "/index.html" },
+    { "source": "/work/:id", "destination": "/project.html" },
+    { "source": "/admin", "destination": "/admin.html" },
+    { "source": "/about", "destination": "/about.html" }
+  ]
+}

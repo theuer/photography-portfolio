@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Project</title>
+  <meta name="description" content="A photography portfolio." />
+  <meta property="og:title" content="Photography Portfolio" />
+  <meta property="og:description" content="A photography portfolio." />
+  <meta property="og:type" content="website" />
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body class="project-page">
+
+  <!-- ══════════════════════════════════════════════════════════
+       Header
+  ══════════════════════════════════════════════════════════ -->
+  <header class="site-header">
+    <div class="site-header__inner">
+
+      <a href="/" class="back-link" aria-label="Back to all projects">
+        <svg viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M8.5 2L3.5 7L8.5 12" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        All projects
+      </a>
+
+      <span class="project-header-title" id="project-header-title"></span>
+
+      <nav class="site-nav">
+        <a href="/" class="site-nav__link" id="site-name-link">Work</a>
+        <a href="/about" class="site-nav__link">About</a>
+      </nav>
+
+    </div>
+  </header>
+
+  <!-- ══════════════════════════════════════════════════════════
+       Main — full-height horizontal scroll
+  ══════════════════════════════════════════════════════════ -->
+  <main class="page-content" id="page-content">
+    <div class="loading-state" id="loading">Loading&hellip;</div>
+  </main>
+
+  <!-- ══════════════════════════════════════════════════════════
+       Lightbox
+  ══════════════════════════════════════════════════════════ -->
+  <div id="lightbox" class="lightbox" role="dialog" aria-modal="true" aria-label="Image viewer">
+
+    <button class="lightbox__close" id="lb-close" aria-label="Close">&#x2715;</button>
+
+    <!-- Clicking the stage (outside the image) also closes -->
+    <div class="lightbox__stage" id="lb-stage">
+      <img class="lightbox__img" id="lb-img" src="" alt="" />
+    </div>
+
+    <button class="lightbox__prev" id="lb-prev" aria-label="Previous image">
+      <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 4L6 10L12 16" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
+
+    <button class="lightbox__next" id="lb-next" aria-label="Next image">
+      <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M8 4L14 10L8 16" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
+
+    <span class="lightbox__counter" id="lb-counter"></span>
+  </div>
+
+  <script>
+    // ─── Read ?project= from URL ─────────────────────────────
+    const projectId = window.location.pathname.split('/').pop();
+    if (!projectId || projectId === 'project.html') { window.location.href = '/'; }
+
+    // ─── Lightbox state ──────────────────────────────────────
+    let imageSrcs = [];
+    let lbIndex   = 0;
+    let lbOpen    = false;
+
+    const lb        = document.getElementById('lightbox');
+    const lbImg     = document.getElementById('lb-img');
+    const lbCounter = document.getElementById('lb-counter');
+    const lbStage   = document.getElementById('lb-stage');
+
+    function openLightbox(index) {
+      lbIndex    = index;
+      lbImg.src  = imageSrcs[lbIndex];
+      lbImg.alt  = `Image ${lbIndex + 1}`;
+      updateCounter();
+      lb.classList.add('open');
+      lbOpen = true;
+    }
+
+    function closeLightbox() {
+      lb.classList.remove('open');
+      lbOpen = false;
+    }
+
+    function lbNavigate(dir) {
+      lbImg.classList.add('fading');
+      setTimeout(() => {
+        lbIndex   = (lbIndex + dir + imageSrcs.length) % imageSrcs.length;
+        lbImg.src = imageSrcs[lbIndex];
+        updateCounter();
+        lbImg.classList.remove('fading');
+      }, 180);
+    }
+
+    function updateCounter() {
+      lbCounter.textContent = `${lbIndex + 1} / ${imageSrcs.length}`;
+    }
+
+    document.getElementById('lb-close').addEventListener('click', closeLightbox);
+    document.getElementById('lb-prev').addEventListener('click', e => { e.stopPropagation(); lbNavigate(-1); });
+    document.getElementById('lb-next').addEventListener('click', e => { e.stopPropagation(); lbNavigate(1); });
+
+    // Click stage background (not the image) to close
+    lbStage.addEventListener('click', e => {
+      if (e.target === lbStage) closeLightbox();
+    });
+
+    // ─── Load data ───────────────────────────────────────────
+    fetch('/data/projects.json')
+      .then(r => r.json())
+      .then(data => {
+        const { site, projects } = data;
+
+        // site name used only in page title on project page
+
+        const project = projects.find(p => (p.slug || p.id) === projectId);
+        if (!project) { window.location.href = '/'; return; }
+
+        document.title = `${project.title} — ${site.name}`;
+
+        // Update meta/OG tags per project
+        document.querySelector('meta[property="og:title"]').setAttribute('content', `${project.title} — ${site.name}`);
+        if (site.description) {
+          document.querySelector('meta[name="description"]').setAttribute('content', site.description);
+          document.querySelector('meta[property="og:description"]').setAttribute('content', site.description);
+        }
+        document.getElementById('project-header-title').textContent = project.title;
+
+        const idx         = projects.indexOf(project);
+        const prevProject = idx > 0 ? projects[idx - 1] : null;
+        const nextProject = idx < projects.length - 1 ? projects[idx + 1] : null;
+
+        // ── Build horizontal scroll strip ─────────────────────
+        const main = document.getElementById('page-content');
+        main.innerHTML = '';
+
+        const strip = document.createElement('div');
+        strip.className = 'project-images';
+        strip.id        = 'project-images';
+
+        // Intro panel
+        const introPanel = document.createElement('div');
+        introPanel.className = 'project-intro-panel';
+        introPanel.innerHTML = `
+          <span class="project-intro-panel__title">${esc(project.title)}</span>
+          ${project.description
+            ? textToHtml(project.description, 'project-intro-panel__description')
+            : ''}
+          <span class="project-intro-panel__year">${esc(String(project.year))}</span>
+        `;
+        strip.appendChild(introPanel);
+
+        // Items — images and text blocks, interspersed in any order
+        let lbCount = 0; // counts only photos for lightbox indexing
+
+        (project.images || []).forEach((item, i) => {
+
+          // ── Text / heading block ──────────────────────────
+          if (item.type === 'text') {
+            const panel = document.createElement('div');
+            panel.className = 'project-text-item';
+            if (item.heading) {
+              const h = document.createElement('p');
+              h.className   = 'project-text-item__heading';
+              h.textContent = item.heading;
+              panel.appendChild(h);
+            }
+            if (item.body) {
+              const bodyWrap = document.createElement('div');
+              bodyWrap.innerHTML = textToHtml(item.body, 'project-text-item__body');
+              panel.appendChild(bodyWrap);
+            }
+            strip.appendChild(panel);
+            return;
+          }
+
+          // ── Photo ─────────────────────────────────────────
+          const thisLbIdx = lbCount++;
+          imageSrcs.push(item.src.startsWith('/') ? item.src : '/' + item.src);
+
+          const figure = document.createElement('figure');
+          figure.className = 'project-image';
+
+          // Inner wrapper shrinks to image width — caption is naturally constrained
+          const inner = document.createElement('div');
+          inner.className = 'project-image__inner';
+
+          const img = document.createElement('img');
+          img.alt       = `${project.title} — ${thisLbIdx + 1}`;
+          img.loading   = i < 3 ? 'eager' : 'lazy';
+          img.draggable = false;
+          inner.appendChild(img);
+
+          if (item.caption) {
+            const cap = document.createElement('figcaption');
+            cap.className = 'project-image__caption';
+            cap.innerHTML = item.caption.split('\n').map(esc).join('<br>');
+            inner.appendChild(cap);
+          }
+
+          figure.appendChild(inner);
+
+          // Open lightbox on click — only if mouse didn't move much (not a drag) and not mobile
+          figure.addEventListener('click', () => {
+            if (stripDragMoved > 8) return;
+            if (window.matchMedia('(max-width: 600px)').matches) return;
+            openLightbox(thisLbIdx);
+          });
+
+          strip.appendChild(figure);
+
+          function pinWidth() {
+            if (window.matchMedia('(max-width: 600px)').matches) return;
+            requestAnimationFrame(() => {
+              const w = img.offsetWidth;
+              if (w > 0) inner.style.width = w + 'px';
+            });
+          }
+
+          img.addEventListener('load',  () => { img.classList.add('loaded'); pinWidth(); });
+          img.addEventListener('error', () => {
+            // Hide the entire figure so no orphan caption or blank padding remains
+            figure.style.display = 'none';
+          });
+          img.src = item.src.startsWith('/') ? item.src : '/' + item.src;
+          if (img.complete && img.naturalWidth) { img.classList.add('loaded'); pinWidth(); }
+        });
+
+        // End panel
+        const endPanel = document.createElement('div');
+        endPanel.className = 'project-end-panel';
+
+        if (nextProject) {
+          endPanel.innerHTML += `
+            <a href="/work/${encodeURIComponent(nextProject.slug || nextProject.id)}" class="project-end-panel__link">
+              <span class="project-end-panel__label">Next</span>
+              <span class="project-end-panel__title">${esc(nextProject.title)}</span>
+            </a>`;
+        }
+
+        if (prevProject && nextProject) {
+          endPanel.innerHTML += `<div class="project-end-panel__divider"></div>`;
+        }
+
+        if (prevProject) {
+          endPanel.innerHTML += `
+            <a href="/work/${encodeURIComponent(prevProject.slug || prevProject.id)}" class="project-end-panel__link">
+              <span class="project-end-panel__label">Previous</span>
+              <span class="project-end-panel__title">${esc(prevProject.title)}</span>
+            </a>`;
+        }
+
+        endPanel.innerHTML += `
+          <div class="project-end-panel__links">
+            <a href="/" class="project-end-panel__back">← All projects</a>
+            <button class="project-end-panel__back project-end-panel__back--start" id="back-to-start">← Back to start</button>
+          </div>
+        `;
+
+        strip.appendChild(endPanel);
+        main.appendChild(strip);
+
+        // ── Scroll interactions ───────────────────────────────
+        initScroll(strip);
+
+        document.getElementById('back-to-start')
+          .addEventListener('click', () => scrollToBeginning && scrollToBeginning());
+      })
+      .catch(err => {
+        document.getElementById('loading').textContent =
+          'Could not load project. Make sure you are running this from a web server.';
+        console.error(err);
+      });
+
+    // ─── Scroll: smooth lerp + drag + keyboard ───────────────
+    let stripDragMoved   = 0;     // pixels moved in current/last drag — checked by figure clicks
+    let scrollToBeginning = null;  // set by initScroll, used by end-panel button
+
+    function initScroll(el) {
+      const EASE = 0.18;          // snappier lerp for mouse wheel
+      const TRACKPAD_THRESHOLD = 5; // deltas smaller than this = trackpad pixel scroll
+      let targetX  = 0;
+      let currentX = 0;
+      let rafId    = null;
+
+      function clamp(v) {
+        return Math.max(0, Math.min(v, el.scrollWidth - el.clientWidth));
+      }
+      function syncCurrent() { currentX = targetX = el.scrollLeft; }
+
+      function tick() {
+        const diff = targetX - currentX;
+        if (Math.abs(diff) < 0.5) {
+          currentX = targetX;
+          el.scrollLeft = targetX;
+          rafId = null;
+          return;
+        }
+        currentX += diff * EASE;
+        el.scrollLeft = currentX;
+        rafId = requestAnimationFrame(tick);
+      }
+
+      function smoothScrollBy(px) {
+        if (!rafId) currentX = el.scrollLeft;
+        targetX = clamp(targetX + px);
+        if (!rafId) rafId = requestAnimationFrame(tick);
+      }
+
+      function smoothScrollTo(pos) {
+        if (!rafId) currentX = el.scrollLeft;
+        targetX = clamp(pos);
+        if (!rafId) rafId = requestAnimationFrame(tick);
+      }
+
+      const isMobile = () => window.matchMedia('(max-width: 600px)').matches;
+
+      // Expose for the end-panel "back to start" button
+      scrollToBeginning = () => {
+        if (isMobile()) window.scrollTo({ top: 0, behavior: 'smooth' });
+        else smoothScrollTo(0);
+      };
+
+      // 1. Wheel → horizontal (desktop only)
+      window.addEventListener('wheel', e => {
+        if (lbOpen || isMobile()) return;
+        e.preventDefault();
+
+        // Combine both axes — handles diagonal trackpad swipes correctly
+        let delta = e.deltaX + e.deltaY;
+        if (e.deltaMode === 1) delta *= 40; // Firefox line mode
+
+        const absDelta = Math.abs(delta);
+
+        // Trackpad: pixel-precise small deltas — scroll directly, no lerp
+        // Mouse wheel: large discrete steps — lerp for smoothness
+        if (absDelta < TRACKPAD_THRESHOLD * 10) {
+          // Trackpad: sync lerp state to actual position and apply directly
+          if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+          el.scrollLeft = clamp(el.scrollLeft + delta);
+          currentX = targetX = el.scrollLeft;
+        } else {
+          // Mouse wheel: cap single-event scroll and lerp
+          smoothScrollBy(Math.sign(delta) * Math.min(absDelta, 300));
+        }
+      }, { passive: false });
+
+      // 2. Click-and-drag
+      let isDragging  = false;
+      let dragStartX  = 0;
+      let dragOriginX = 0;
+
+      el.addEventListener('mousedown', e => {
+        if (isMobile() || e.target.closest('a')) return;
+        isDragging     = true;
+        stripDragMoved = 0;   // reset on every new press
+        dragStartX     = e.clientX;
+        dragOriginX    = el.scrollLeft;
+        syncCurrent();
+        if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+        el.classList.add('is-dragging');
+      });
+
+      window.addEventListener('mouseup', () => {
+        if (!isDragging) return;
+        isDragging = false;
+        syncCurrent();
+        el.classList.remove('is-dragging');
+        // stripDragMoved is read by figure click handlers directly — no rAF needed
+      });
+
+      window.addEventListener('mousemove', e => {
+        if (!isDragging) return;
+        const dx = e.clientX - dragStartX;
+        stripDragMoved = Math.abs(dx);
+        el.scrollLeft  = clamp(dragOriginX - dx);
+        currentX = targetX = el.scrollLeft;
+      });
+
+      // 3. Arrow keys (skip when lightbox is open — lightbox handles them)
+      window.addEventListener('keydown', e => {
+        if (lbOpen) {
+          if (e.key === 'Escape')     { e.preventDefault(); closeLightbox(); }
+          if (e.key === 'ArrowRight') { e.preventDefault(); lbNavigate(1);   }
+          if (e.key === 'ArrowLeft')  { e.preventDefault(); lbNavigate(-1);  }
+          return;
+        }
+        const step = window.innerWidth * 0.65;
+        if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+          e.preventDefault(); smoothScrollBy(step);
+        } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+          e.preventDefault(); smoothScrollBy(-step);
+        }
+      });
+    }
+
+    // ─── Utilities ───────────────────────────────────────────
+    function esc(str) {
+      return String(str)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    // Convert plain text to HTML: double newline → new <p>, single → <br>
+    function textToHtml(str, cls) {
+      return str
+        .split(/\n\n+/)
+        .filter(p => p.trim())
+        .map(p => `<p class="${cls}">${esc(p).replace(/\n/g, '<br>')}</p>`)
+        .join('');
+    }
+  </script>
+</body>
+</html>

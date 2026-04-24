@@ -1,0 +1,1253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin — Portfolio</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --font: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      --bg: #fff;
+      --text: #111;
+      --muted: #999;
+      --border: #e0e0e0;
+      --hover-bg: #f7f7f7;
+      --accent: #111;
+      --red: #c0392b;
+      --green: #27ae60;
+      --header-h: 52px;
+    }
+
+    html { font-size: 13px; -webkit-font-smoothing: antialiased; }
+    body { font-family: var(--font); background: var(--bg); color: var(--text); line-height: 1.5; }
+    a { color: inherit; text-decoration: none; }
+    button { font-family: var(--font); font-size: 12px; cursor: pointer; border: none; background: none; }
+    input, textarea, select { font-family: var(--font); font-size: 13px; color: var(--text); }
+    textarea { resize: vertical; }
+
+    /* ── Buttons ── */
+    .btn {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 7px 14px; border: 1px solid var(--border);
+      background: var(--bg); color: var(--text);
+      font-size: 12px; letter-spacing: 0.04em; cursor: pointer;
+      transition: background 0.15s, border-color 0.15s, color 0.15s;
+      white-space: nowrap;
+    }
+    .btn:hover { background: var(--hover-bg); }
+    .btn--primary { background: var(--text); color: var(--bg); border-color: var(--text); }
+    .btn--primary:hover { background: #333; border-color: #333; }
+    .btn--danger { color: var(--red); border-color: #f5c6c2; }
+    .btn--danger:hover { background: #fdf0ef; }
+    .btn--ghost { border-color: transparent; }
+    .btn--ghost:hover { background: var(--hover-bg); border-color: var(--border); }
+    .btn--small { padding: 4px 10px; font-size: 11px; }
+    .btn--icon { padding: 5px 8px; border-color: transparent; color: var(--muted); }
+    .btn--icon:hover { color: var(--text); background: var(--hover-bg); border-color: var(--border); }
+    .btn--icon-danger:hover { color: var(--red); }
+
+    /* ── Welcome screen ── */
+    .welcome {
+      min-height: 100vh; display: flex; align-items: center; justify-content: center;
+      padding: 40px 24px;
+    }
+    .welcome__inner { max-width: 400px; width: 100%; text-align: center; }
+    .welcome__title { font-size: 18px; font-weight: 400; letter-spacing: 0.03em; margin-bottom: 12px; }
+    .welcome__sub { color: var(--muted); margin-bottom: 32px; line-height: 1.6; }
+    .welcome__btn { width: 100%; justify-content: center; padding: 13px 24px; font-size: 13px; }
+    .welcome__note { margin-top: 20px; font-size: 12px; color: var(--muted); line-height: 1.6; }
+    .welcome__note a { border-bottom: 1px solid var(--border); }
+    .no-support { background: #fffbea; border: 1px solid #f5e07a;
+      padding: 14px 18px; margin-bottom: 24px; font-size: 12px; line-height: 1.6; color: #7a6a00; }
+
+    /* ── Header ── */
+    .admin-header {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+      height: var(--header-h); background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 24px; gap: 16px;
+    }
+    .admin-header__left { display: flex; align-items: center; gap: 12px; }
+    .admin-badge {
+      font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase;
+      background: var(--text); color: var(--bg); padding: 2px 7px;
+    }
+    .admin-site-name { font-size: 13px; color: var(--muted); }
+    .admin-header__right { display: flex; align-items: center; gap: 8px; }
+    .save-status {
+      font-size: 11px; color: var(--muted);
+      transition: color 0.3s;
+    }
+    .save-status.saved { color: var(--green); }
+    .save-status.error { color: var(--red); }
+
+    /* ── Main layout ── */
+    .admin-body { padding-top: var(--header-h); }
+    .admin-content { max-width: 760px; margin: 0 auto; padding: 40px 24px 120px; }
+
+    /* ── Sections ── */
+    .admin-section { margin-bottom: 48px; }
+    .section-row {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    .section-title { font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+
+    /* ── Form fields ── */
+    .field { margin-bottom: 16px; }
+    .field label { display: block; font-size: 11px; letter-spacing: 0.07em; text-transform: uppercase;
+      color: var(--muted); margin-bottom: 6px; }
+    .field input, .field textarea {
+      width: 100%; padding: 9px 12px; border: 1px solid var(--border);
+      background: var(--bg); outline: none; line-height: 1.5;
+      transition: border-color 0.15s;
+    }
+    .field input:focus, .field textarea:focus { border-color: var(--text); }
+    .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .field-row-3 { display: grid; grid-template-columns: 1fr 1fr 80px; gap: 16px; }
+    .field-inline { display: flex; gap: 8px; }
+    .field-inline input { flex: 1; }
+    .field-hint { font-size: 11px; color: var(--muted); margin-top: 5px; }
+
+    /* ── Site settings ── */
+    .site-settings {
+      border: 1px solid var(--border);
+      padding: 20px 24px;
+    }
+
+    /* ── Project cards ── */
+    .projects-list { border: 1px solid var(--border); }
+    .project-item { border-bottom: 1px solid var(--border); }
+    .project-item:last-child { border-bottom: none; }
+
+    .project-item-header {
+      display: flex; align-items: center; gap: 0;
+      cursor: pointer; user-select: none;
+      transition: background 0.1s;
+    }
+    .project-item-header:hover { background: var(--hover-bg); }
+
+    .drag-handle {
+      padding: 0 12px; color: #ccc; cursor: grab; font-size: 16px;
+      height: 48px; display: flex; align-items: center;
+      flex-shrink: 0;
+    }
+    .drag-handle:active { cursor: grabbing; }
+    .project-item.dragging { opacity: 0.4; }
+    .project-item.drag-over { border-top: 2px solid var(--text); }
+
+    .project-item-info { flex: 1; padding: 14px 0; min-width: 0; }
+    .project-item-title { font-size: 13px; }
+    .project-item-meta { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+    .project-item-actions {
+      display: flex; align-items: center; gap: 4px;
+      padding: 0 12px; flex-shrink: 0;
+    }
+
+    .expand-icon { width: 16px; height: 16px; color: var(--muted); flex-shrink: 0;
+      transition: transform 0.2s; }
+    .project-item.open .expand-icon { transform: rotate(90deg); }
+
+    /* ── Project editor (expanded) ── */
+    .project-editor {
+      display: none; padding: 24px; border-top: 1px solid var(--border);
+      background: #fafafa;
+    }
+    .project-item.open .project-editor { display: block; }
+
+    .editor-section { margin-bottom: 24px; }
+    .editor-section-title {
+      font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase;
+      color: var(--muted); margin-bottom: 14px; padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    /* ── About link rows ── */
+    .about-link-row {
+      display: flex; gap: 8px; align-items: center; margin-bottom: 6px;
+    }
+    .about-link-row input { flex: 1; padding: 6px 10px; border: 1px solid var(--border);
+      background: var(--bg); font-size: 12px; outline: none; }
+    .about-link-row input:focus { border-color: var(--text); }
+
+    /* ── Cover position picker ── */
+    .cover-position-picker {
+      display: inline-grid; grid-template-columns: repeat(3, 20px);
+      grid-template-rows: repeat(3, 20px); gap: 3px; margin-top: 8px;
+    }
+    .cover-position-picker__dot {
+      width: 20px; height: 20px; border-radius: 3px;
+      background: var(--border); border: 1px solid var(--border);
+      cursor: pointer; transition: background 0.15s;
+    }
+    .cover-position-picker__dot:hover { background: #ccc; }
+    .cover-position-picker__dot.active { background: var(--text); border-color: var(--text); }
+
+    /* ── Images list ── */
+    .images-list { margin-bottom: 12px; }
+    .image-item {
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px 0; border-bottom: 1px solid var(--border);
+    }
+    .image-item:last-child { border-bottom: none; }
+    .image-item .drag-handle { padding: 0 8px 0 0; height: 30px; font-size: 14px; }
+    .image-item input { flex: 1; padding: 6px 10px; border: 1px solid var(--border);
+      background: var(--bg); font-size: 12px; outline: none; }
+    .image-item input:focus { border-color: var(--text); }
+    .image-item__caption { width: 180px; flex-shrink: 0; }
+    .image-item textarea.image-item__caption {
+      padding: 6px 10px; border: 1px solid var(--border); background: var(--bg);
+      font-size: 12px; outline: none; resize: vertical; min-height: 30px;
+      font-family: inherit; line-height: 1.4;
+    }
+    .image-item textarea.image-item__caption:focus { border-color: var(--text); }
+    .image-item.dragging { opacity: 0.4; }
+    .image-item.drag-over { border-top: 2px solid var(--text); }
+
+    .images-columns {
+      display: grid; grid-template-columns: 1fr 180px 32px;
+      gap: 0; font-size: 11px; letter-spacing: 0.07em; text-transform: uppercase;
+      color: var(--muted); padding: 0 0 6px 24px; margin-bottom: 0;
+    }
+
+    /* Text item rows */
+    .image-item--text { background: #f9f9f9; }
+    .image-item__type-badge {
+      font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase;
+      background: #e8e8e8; color: #888; padding: 2px 7px; flex-shrink: 0;
+      align-self: center;
+    }
+
+    /* ── File picker modal ── */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.4);
+      z-index: 500; display: flex; align-items: center; justify-content: center;
+      padding: 24px;
+    }
+    .modal {
+      background: var(--bg); width: 100%; max-width: 560px;
+      max-height: 80vh; display: flex; flex-direction: column;
+      border: 1px solid var(--border);
+    }
+    .modal__header {
+      padding: 18px 24px; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
+    }
+    .modal__title { font-size: 13px; letter-spacing: 0.03em; }
+    .modal__body { flex: 1; overflow-y: auto; padding: 16px 24px; }
+    .modal__footer { padding: 16px 24px; border-top: 1px solid var(--border);
+      display: flex; justify-content: flex-end; gap: 8px; flex-shrink: 0; }
+
+    .file-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+      gap: 8px; margin-bottom: 8px;
+    }
+    .file-item {
+      border: 1px solid var(--border); cursor: pointer;
+      transition: border-color 0.15s; position: relative;
+    }
+    .file-item:hover { border-color: #aaa; }
+    .file-item.selected { border-color: var(--text); border-width: 2px; }
+    .file-item.already-added { opacity: 0.4; pointer-events: none; }
+    .file-item img { width: 100%; aspect-ratio: 1; object-fit: cover; display: block; }
+    .file-item__name { font-size: 10px; color: var(--muted); padding: 4px 6px;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .file-item .check {
+      position: absolute; top: 4px; right: 4px; width: 18px; height: 18px;
+      background: var(--text); display: none; align-items: center; justify-content: center;
+    }
+    .file-item.selected .check { display: flex; }
+    .check svg { width: 10px; height: 10px; color: white; }
+    .modal-empty { padding: 40px 0; text-align: center; color: var(--muted); font-size: 13px; }
+
+    /* ── Add project form ── */
+    .new-project-form {
+      border: 1px solid var(--border); border-top: none;
+      padding: 24px; background: #fafafa; display: none;
+    }
+    .new-project-form.open { display: block; }
+
+    /* ── Empty state ── */
+    .empty-state {
+      padding: 40px 24px; text-align: center;
+      color: var(--muted); border: 1px solid var(--border);
+    }
+
+    /* ── Divider ── */
+    .divider { border: none; border-top: 1px solid var(--border); margin: 32px 0; }
+
+    /* ── Toast ── */
+    .toast {
+      position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%);
+      background: var(--text); color: var(--bg); padding: 10px 20px;
+      font-size: 12px; letter-spacing: 0.04em;
+      opacity: 0; transition: opacity 0.2s; pointer-events: none; z-index: 999;
+    }
+    .toast.show { opacity: 1; }
+    .toast.error { background: var(--red); }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════════════
+     Welcome Screen
+══════════════════════════════════════════════════════════ -->
+<div id="welcome-screen" class="welcome">
+  <div class="welcome__inner">
+    <p class="welcome__title">Portfolio Admin</p>
+    <p class="welcome__sub">Open your site folder to manage projects, images, and copy — no JSON editing required.</p>
+
+    <div id="no-support-msg" class="no-support" style="display:none">
+      Your browser doesn't support the File System Access API.<br>
+      Please use <strong>Chrome</strong> or <strong>Edge</strong>.
+    </div>
+
+    <button id="open-folder-btn" class="btn btn--primary welcome__btn">
+      Open Site Folder
+    </button>
+
+    <p class="welcome__note">
+      Select the folder that contains <code>index.html</code>.<br>
+      Your browser will ask for read &amp; write permission.
+    </p>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     Admin UI
+══════════════════════════════════════════════════════════ -->
+<div id="admin-main" style="display:none">
+
+  <header class="admin-header">
+    <div class="admin-header__left">
+      <span class="admin-badge">Admin</span>
+      <span class="admin-site-name" id="header-site-name"></span>
+    </div>
+    <div class="admin-header__right">
+      <span class="save-status" id="save-status"></span>
+      <a href="/" target="_blank" class="btn btn--ghost btn--small">View Site ↗</a>
+      <button id="save-btn" class="btn btn--primary btn--small">Save</button>
+    </div>
+  </header>
+
+  <div class="admin-body">
+    <div class="admin-content">
+
+      <!-- Site settings -->
+      <div class="admin-section">
+        <div class="section-row">
+          <span class="section-title">Site</span>
+        </div>
+        <div class="site-settings">
+          <div class="field">
+            <label>Photographer Name</label>
+            <input type="text" id="site-name-input" placeholder="Your Name" />
+          </div>
+          <div class="field" style="margin-bottom:0">
+            <label>Short description</label>
+            <input type="text" id="site-description-input" placeholder="Short bio or location, shown in meta description." />
+            <div class="field-hint">Used as meta description for search engines and social sharing.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- About -->
+      <div class="admin-section">
+        <div class="section-row">
+          <span class="section-title">About</span>
+        </div>
+        <div class="field">
+          <label>Text</label>
+          <textarea id="about-text-input" rows="6" placeholder="Bio, statement, etc. Double line break = new paragraph."></textarea>
+        </div>
+        <div class="field">
+          <label>Photo</label>
+          <div class="field-inline">
+            <input type="text" id="about-image-input" placeholder="images/about.jpg" />
+          </div>
+        </div>
+        <div class="field">
+          <label>Links</label>
+          <div id="about-links-list"></div>
+          <button class="btn btn--small" id="add-link-btn" style="margin-top:8px">+ Add Link</button>
+        </div>
+      </div>
+
+      <!-- Projects -->
+      <div class="admin-section">
+        <div class="section-row">
+          <span class="section-title">Projects</span>
+          <button id="add-project-btn" class="btn btn--small">+ New Project</button>
+        </div>
+
+        <!-- New project form -->
+        <div class="new-project-form" id="new-project-form">
+          <div class="field-row">
+            <div class="field">
+              <label>Title</label>
+              <input type="text" id="new-title" placeholder="Project Title" />
+            </div>
+            <div class="field">
+              <label>Year</label>
+              <input type="text" id="new-year" placeholder="2025 or 2020–2024" />
+            </div>
+          </div>
+          <div class="field">
+            <label>ID <span style="font-weight:400;text-transform:none;letter-spacing:0">(used in URL &amp; folder name)</span></label>
+            <input type="text" id="new-id" placeholder="project-title" />
+            <div class="field-hint">Lowercase, hyphens only. Must match your <code>images/</code> folder name.</div>
+          </div>
+          <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:4px">
+            <button id="cancel-new-btn" class="btn btn--small">Cancel</button>
+            <button id="confirm-new-btn" class="btn btn--primary btn--small">Create Project</button>
+          </div>
+        </div>
+
+        <!-- Project list -->
+        <div class="projects-list" id="projects-list">
+          <div class="empty-state">No projects yet. Click "+ New Project" to add one.</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     Image Picker Modal
+══════════════════════════════════════════════════════════ -->
+<div id="modal-overlay" class="modal-overlay" style="display:none">
+  <div class="modal">
+    <div class="modal__header">
+      <span class="modal__title" id="modal-title">Add Images</span>
+      <button class="btn btn--icon" id="modal-close-btn">✕</button>
+    </div>
+    <div class="modal__body" id="modal-body">
+      <div class="modal-empty">Scanning folder…</div>
+    </div>
+    <div class="modal__footer">
+      <button class="btn btn--small" id="modal-select-all-btn" style="margin-right:auto;display:none">Select All</button>
+      <button class="btn btn--small" id="modal-cancel-btn">Cancel</button>
+      <button class="btn btn--primary btn--small" id="modal-confirm-btn">Add Selected</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════════════════════════
+// State
+// ══════════════════════════════════════════════════════════════
+let dirHandle = null;   // root directory handle
+let data = null;        // parsed projects.json { site, projects }
+let openProjectId = null;
+let modalCallback = null;
+let isDirty = false;    // true if there are unsaved changes
+
+function markDirty() { isDirty = true; }
+function markClean() { isDirty = false; }
+
+// ══════════════════════════════════════════════════════════════
+// Init
+// ══════════════════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+  if (!window.showDirectoryPicker) {
+    document.getElementById('no-support-msg').style.display = 'block';
+    document.getElementById('open-folder-btn').disabled = true;
+  }
+
+  document.getElementById('open-folder-btn').addEventListener('click', openFolder);
+  document.getElementById('save-btn').addEventListener('click', saveData);
+
+  window.addEventListener('beforeunload', e => {
+    if (isDirty) {
+      e.preventDefault();
+      e.returnValue = '';
+    }
+  });
+
+  // Mark dirty on any text input/change (catches all fields automatically)
+  document.addEventListener('input',  () => { if (data) markDirty(); });
+  document.addEventListener('change', () => { if (data) markDirty(); });
+  document.getElementById('add-project-btn').addEventListener('click', toggleNewProjectForm);
+  document.getElementById('cancel-new-btn').addEventListener('click', toggleNewProjectForm);
+  document.getElementById('confirm-new-btn').addEventListener('click', createProject);
+  document.getElementById('modal-close-btn').addEventListener('click', closeModal);
+  document.getElementById('modal-cancel-btn').addEventListener('click', closeModal);
+  document.getElementById('modal-confirm-btn').addEventListener('click', confirmModal);
+
+  // Auto-generate id from title
+  document.getElementById('new-title').addEventListener('input', e => {
+    document.getElementById('new-id').value = slugify(e.target.value);
+  });
+
+  document.getElementById('site-name-input').addEventListener('input', e => {
+    data.site.name = e.target.value;
+    document.getElementById('header-site-name').textContent = e.target.value;
+  });
+
+  document.getElementById('site-description-input').addEventListener('input', e => {
+    if (!data) return;
+    data.site.description = e.target.value;
+  });
+
+  document.getElementById('about-text-input').addEventListener('input', e => {
+    if (!data) return;
+    if (!data.about) data.about = {};
+    data.about.text = e.target.value;
+  });
+
+  document.getElementById('about-image-input').addEventListener('input', e => {
+    if (!data) return;
+    if (!data.about) data.about = {};
+    data.about.image = e.target.value;
+  });
+
+  document.getElementById('add-link-btn').addEventListener('click', () => {
+    if (!data) return;
+    if (!data.about) data.about = {};
+    if (!data.about.links) data.about.links = [];
+    data.about.links.push({ label: '', url: '' });
+    markDirty();
+    renderAboutLinks();
+  });
+});
+
+// ══════════════════════════════════════════════════════════════
+// File System Access
+// ══════════════════════════════════════════════════════════════
+async function openFolder() {
+  try {
+    dirHandle = await window.showDirectoryPicker({ mode: 'readwrite' });
+    await loadData();
+  } catch (err) {
+    if (err.name !== 'AbortError') showToast('Could not open folder: ' + err.message, true);
+  }
+}
+
+async function loadData() {
+  try {
+    const dataDir = await dirHandle.getDirectoryHandle('data');
+    const fileHandle = await dataDir.getFileHandle('projects.json');
+    const file = await fileHandle.getFile();
+    const text = await file.text();
+    data = JSON.parse(text);
+
+    // Show admin UI
+    document.getElementById('welcome-screen').style.display = 'none';
+    document.getElementById('admin-main').style.display = 'block';
+
+    document.getElementById('site-name-input').value = data.site.name || '';
+    document.getElementById('site-description-input').value = data.site.description || '';
+    document.getElementById('header-site-name').textContent = data.site.name || '';
+
+    renderAbout();
+    renderProjects();
+  } catch (err) {
+    showToast('Could not read projects.json — are you in the right folder?', true);
+    console.error(err);
+  }
+}
+
+async function saveData() {
+  try {
+    const dataDir = await dirHandle.getDirectoryHandle('data');
+    const fileHandle = await dataDir.getFileHandle('projects.json', { create: true });
+    const writable = await fileHandle.createWritable();
+    await writable.write(JSON.stringify(data, null, 2) + '\n');
+    await writable.close();
+
+    const status = document.getElementById('save-status');
+    status.textContent = 'Saved';
+    status.className = 'save-status saved';
+    setTimeout(() => { status.textContent = ''; status.className = 'save-status'; }, 2500);
+    markClean();
+    showToast('Saved successfully');
+  } catch (err) {
+    showToast('Save failed: ' + err.message, true);
+    console.error(err);
+  }
+}
+
+// Returns the effective image folder path for a project
+function imgFolder(project) {
+  return (project.imageFolder || ('images/' + project.id)).replace(/\/$/, '');
+}
+
+async function getImagesInFolder(folderPath) {
+  try {
+    const parts = folderPath.split('/').filter(Boolean);
+    let dir = dirHandle;
+    for (const part of parts) {
+      dir = await dir.getDirectoryHandle(part);
+    }
+    const files = [];
+    for await (const [name, handle] of dir.entries()) {
+      if (handle.kind === 'file' && /\.(jpg|jpeg|png|webp|gif)$/i.test(name)) {
+        files.push({ name, handle });
+      }
+    }
+    return files.sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
+  } catch {
+    return [];
+  }
+}
+
+async function getImageObjectURL(fileHandle) {
+  try {
+    const file = await fileHandle.getFile();
+    return URL.createObjectURL(file);
+  } catch {
+    return null;
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+// Render
+// ══════════════════════════════════════════════════════════════
+function renderAbout() {
+  const about = data.about || {};
+  document.getElementById('about-text-input').value = about.text || '';
+  document.getElementById('about-image-input').value = about.image || '';
+  renderAboutLinks();
+}
+
+function renderAboutLinks() {
+  const links = (data.about && data.about.links) || [];
+  const list = document.getElementById('about-links-list');
+  list.innerHTML = links.map((link, i) => `
+    <div class="about-link-row" data-idx="${i}">
+      <input type="text" class="link-label-input" value="${esc(link.label || '')}" placeholder="Label (e.g. Instagram)" data-idx="${i}" />
+      <input type="text" class="link-url-input" value="${esc(link.url || '')}" placeholder="https://…" data-idx="${i}" />
+      <button class="btn btn--icon btn--small btn--icon-danger remove-link-btn" data-idx="${i}" title="Remove">✕</button>
+    </div>
+  `).join('');
+
+  list.querySelectorAll('.link-label-input').forEach(el => {
+    el.addEventListener('input', e => {
+      data.about.links[parseInt(e.target.dataset.idx)].label = e.target.value;
+    });
+  });
+  list.querySelectorAll('.link-url-input').forEach(el => {
+    el.addEventListener('input', e => {
+      data.about.links[parseInt(e.target.dataset.idx)].url = e.target.value;
+    });
+  });
+  list.querySelectorAll('.remove-link-btn').forEach(el => {
+    el.addEventListener('click', e => {
+      data.about.links.splice(parseInt(e.target.dataset.idx), 1);
+      markDirty();
+      renderAboutLinks();
+    });
+  });
+}
+
+function renderProjects() {
+  const list = document.getElementById('projects-list');
+  list.innerHTML = '';
+
+  if (!data.projects || data.projects.length === 0) {
+    list.innerHTML = '<div class="empty-state">No projects yet. Click "+ New Project" to add one.</div>';
+    return;
+  }
+
+  data.projects.forEach((project, idx) => {
+    const item = createProjectItem(project, idx);
+    list.appendChild(item);
+  });
+
+  initProjectDragDrop();
+}
+
+function createProjectItem(project, idx) {
+  const item = document.createElement('div');
+  item.className = 'project-item' + (openProjectId === project.id ? ' open' : '');
+  item.dataset.id = project.id;
+
+  item.innerHTML = `
+    <div class="project-item-header">
+      <span class="drag-handle" title="Drag to reorder">⠿</span>
+      <div class="project-item-info">
+        <div class="project-item-title">${esc(project.title || '(Untitled)')}</div>
+        <div class="project-item-meta">${esc(String(project.year || ''))} · ${project.images ? project.images.length : 0} image${(project.images?.length !== 1) ? 's' : ''}</div>
+      </div>
+      <div class="project-item-actions">
+        <a href="/work/${encodeURIComponent(project.slug || project.id)}" target="_blank" class="btn btn--icon btn--small" title="Preview" onclick="event.stopPropagation()">↗</a>
+        <button class="btn btn--icon btn--small btn--icon-danger delete-project-btn" title="Delete project" data-id="${esc(project.id)}">✕</button>
+        <svg class="expand-icon" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M6 4l4 4-4 4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+    </div>
+    <div class="project-editor" id="editor-${esc(project.id)}">
+      ${renderEditor(project)}
+    </div>
+  `;
+
+  // Toggle open/close
+  item.querySelector('.project-item-header').addEventListener('click', e => {
+    if (e.target.closest('.delete-project-btn') || e.target.closest('a')) return;
+    const isOpen = item.classList.contains('open');
+    document.querySelectorAll('.project-item.open').forEach(el => el.classList.remove('open'));
+    if (!isOpen) {
+      item.classList.add('open');
+      openProjectId = project.id;
+    } else {
+      openProjectId = null;
+    }
+  });
+
+  // Delete project
+  item.querySelector('.delete-project-btn').addEventListener('click', e => {
+    e.stopPropagation();
+    if (confirm(`Delete project "${project.title}"? This only removes it from the list — your image files won't be deleted.`)) {
+      data.projects = data.projects.filter(p => p.id !== project.id);
+      if (openProjectId === project.id) openProjectId = null;
+      markDirty();
+      renderProjects();
+    }
+  });
+
+  // Wire up editor fields
+  wireEditor(item, project);
+
+  return item;
+}
+
+function renderEditor(project) {
+  const images = project.images || [];
+  const imageRows = images.map((img, i) => {
+    if (img.type === 'text') {
+      return `
+        <div class="image-item image-item--text" data-idx="${i}" draggable="true">
+          <span class="drag-handle" title="Drag to reorder">⠿</span>
+          <span class="image-item__type-badge">Text</span>
+          <input type="text" class="img-heading-input" value="${esc(img.heading || '')}" placeholder="Heading (optional)" data-idx="${i}" style="flex:1" />
+          <input type="text" class="img-body-input image-item__caption" value="${esc(img.body || '')}" placeholder="Body text" data-idx="${i}" />
+          <button class="btn btn--icon btn--small btn--icon-danger remove-image-btn" data-idx="${i}" title="Remove">✕</button>
+        </div>`;
+    }
+    return `
+      <div class="image-item" data-idx="${i}" draggable="true">
+        <span class="drag-handle" title="Drag to reorder">⠿</span>
+        <input type="text" class="img-src-input" value="${esc(img.src || '')}" placeholder="images/${esc(project.id)}/filename.jpg" data-idx="${i}" />
+        <textarea class="img-caption-input image-item__caption" placeholder="Caption (optional)" data-idx="${i}">${esc(img.caption || '')}</textarea>
+        <button class="btn btn--icon btn--small btn--icon-danger remove-image-btn" data-idx="${i}" title="Remove">✕</button>
+      </div>`;
+  }).join('');
+
+  return `
+    <div class="editor-section">
+      <div class="editor-section-title">Info</div>
+      <div class="field-row">
+        <div class="field">
+          <label>Title</label>
+          <input type="text" class="proj-title" value="${esc(project.title || '')}" placeholder="Project Title" />
+        </div>
+        <div class="field">
+          <label>Year</label>
+          <input type="text" class="proj-year" value="${esc(String(project.year || ''))}" placeholder="2025 or 2020–2024" />
+        </div>
+      </div>
+      <div class="field">
+        <label>Category</label>
+        <input type="text" class="proj-category" value="${esc(project.category || '')}" placeholder="e.g. Ongoing" list="cat-suggestions-${esc(project.id)}" />
+        <datalist id="cat-suggestions-${esc(project.id)}"></datalist>
+        <div class="field-hint">Projects are grouped by category on the home page. Leave blank for no grouping.</div>
+      </div>
+      <div class="field">
+        <label>URL slug</label>
+        <input type="text" class="proj-slug" value="${esc(project.slug || '')}" placeholder="${esc(project.id)} (default)" />
+        <div class="field-hint">Leave blank to use the project ID (<code>${esc(project.id)}</code>). URL will be <code>/work/{slug}</code>.</div>
+      </div>
+      <div class="field">
+        <label>Description</label>
+        <textarea class="proj-desc" rows="3" placeholder="Optional text shown on the project page.">${esc(project.description || '')}</textarea>
+      </div>
+      <div class="field">
+        <label>Cover Image</label>
+        <div class="field-inline">
+          <input type="text" class="proj-cover" value="${esc(project.cover || '')}" placeholder="images/${esc(project.id)}/cover.jpg" />
+          <button class="btn btn--small pick-cover-btn">Browse</button>
+        </div>
+        <div class="field-hint">Displayed as thumbnail on the home page.</div>
+      </div>
+      <div class="field">
+        <label>Cover position</label>
+        <div class="cover-position-picker" title="Set focal point of the cover crop">
+          ${['top left','top center','top right','center left','center center','center right','bottom left','bottom center','bottom right'].map(pos =>
+            `<div class="cover-position-picker__dot${(project.coverPosition||'center center')===pos?' active':''}" data-pos="${pos}"></div>`
+          ).join('')}
+        </div>
+        <div class="field-hint">Click to set which part of the cover image stays visible.</div>
+      </div>
+    </div>
+
+    <div class="editor-section">
+      <div class="editor-section-title">Images</div>
+      <div class="field" style="margin-bottom:12px">
+        <label>Images folder</label>
+        <input type="text" class="proj-image-folder" value="${esc(project.imageFolder || 'images/' + project.id)}" placeholder="images/${esc(project.id)}" />
+        <div class="field-hint">Folder used when browsing and adding images.</div>
+      </div>
+      ${images.length > 0 ? `
+      <div class="images-columns">
+        <span>File path</span><span>Caption</span><span></span>
+      </div>` : ''}
+      <div class="images-list">
+        ${imageRows}
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn--small add-images-btn">+ Add from Folder</button>
+        <button class="btn btn--small add-image-manual-btn">+ Add Manually</button>
+        <button class="btn btn--small add-text-btn">+ Add Text</button>
+      </div>
+    </div>
+  `;
+}
+
+function wireEditor(item, project) {
+  const editor = item.querySelector('.project-editor');
+
+  // Title
+  editor.querySelector('.proj-title').addEventListener('input', e => {
+    project.title = e.target.value;
+    item.querySelector('.project-item-title').textContent = project.title || '(Untitled)';
+  });
+
+  // Year
+  editor.querySelector('.proj-year').addEventListener('input', e => {
+    project.year = e.target.value;
+    updateMeta(item, project);
+  });
+
+  // Category + populate datalist with existing categories
+  const catInput = editor.querySelector('.proj-category');
+  const catDatalist = editor.querySelector('datalist');
+  const existingCats = [...new Set(data.projects.map(p => p.category).filter(Boolean))];
+  existingCats.forEach(cat => {
+    const opt = document.createElement('option');
+    opt.value = cat;
+    catDatalist.appendChild(opt);
+  });
+  catInput.addEventListener('input', e => { project.category = e.target.value; });
+
+  // Slug
+  editor.querySelector('.proj-slug').addEventListener('input', e => {
+    const val = e.target.value.trim();
+    project.slug = val || undefined;
+    // Update the ↗ preview link
+    const previewLink = item.querySelector('a[title="Preview"]');
+    if (previewLink) previewLink.href = `/work/${encodeURIComponent(val || project.id)}`;
+  });
+
+  // Description
+  editor.querySelector('.proj-desc').addEventListener('input', e => {
+    project.description = e.target.value;
+  });
+
+  // Cover
+  editor.querySelector('.proj-cover').addEventListener('input', e => {
+    project.cover = e.target.value;
+  });
+
+  // Images folder
+  editor.querySelector('.proj-image-folder').addEventListener('input', e => {
+    project.imageFolder = e.target.value.replace(/\/$/, ''); // strip trailing slash
+  });
+
+  // Cover position picker
+  editor.querySelectorAll('.cover-position-picker__dot').forEach(dot => {
+    dot.addEventListener('click', () => {
+      editor.querySelectorAll('.cover-position-picker__dot').forEach(d => d.classList.remove('active'));
+      dot.classList.add('active');
+      project.coverPosition = dot.dataset.pos;
+      markDirty();
+    });
+  });
+
+  // Pick cover from folder
+  editor.querySelector('.pick-cover-btn').addEventListener('click', async () => {
+    const folder = imgFolder(project);
+    const files = await getImagesInFolder(folder);
+    openModal(`Pick Cover — ${project.title}`, files, project, async (selected) => {
+      if (selected.length > 0) {
+        const path = `${folder}/${selected[0]}`;
+        project.cover = path;
+        editor.querySelector('.proj-cover').value = path;
+        markDirty();
+      }
+    }, { coverMode: true });
+  });
+
+  // Image / text item inputs
+  editor.addEventListener('input', e => {
+    const idx = parseInt(e.target.dataset.idx);
+    if (isNaN(idx) || !project.images[idx]) return;
+    if (e.target.classList.contains('img-src-input'))     project.images[idx].src     = e.target.value;
+    if (e.target.classList.contains('img-caption-input')) project.images[idx].caption = e.target.value;
+    if (e.target.classList.contains('img-heading-input')) project.images[idx].heading = e.target.value;
+    if (e.target.classList.contains('img-body-input'))    project.images[idx].body    = e.target.value;
+  });
+
+  // Remove image buttons
+  editor.addEventListener('click', e => {
+    const removeBtn = e.target.closest('.remove-image-btn');
+    if (removeBtn) {
+      const idx = parseInt(removeBtn.dataset.idx);
+      project.images.splice(idx, 1);
+      markDirty();
+      refreshImages(editor, project, item);
+    }
+  });
+
+  // Add images from folder
+  editor.querySelector('.add-images-btn').addEventListener('click', async () => {
+    const folder = imgFolder(project);
+    const files = await getImagesInFolder(folder);
+    if (files.length === 0) {
+      showToast(`No images found in ${folder}/. Add your files there first.`, true);
+      return;
+    }
+    const existing = new Set((project.images || []).map(i => i.src));
+    openModal(`Add Images — ${project.title}`, files, project, (selected) => {
+      if (!project.images) project.images = [];
+      selected.forEach(name => {
+        const src = `${folder}/${name}`;
+        if (!existing.has(src)) project.images.push({ src, caption: '' });
+      });
+      markDirty();
+      refreshImages(editor, project, item);
+    }, { multiSelect: true });
+  });
+
+  // Add image manually
+  editor.querySelector('.add-image-manual-btn').addEventListener('click', () => {
+    if (!project.images) project.images = [];
+    project.images.push({ src: `${imgFolder(project)}/`, caption: '' });
+    markDirty();
+    refreshImages(editor, project, item);
+    const inputs = editor.querySelectorAll('.img-src-input');
+    if (inputs.length) inputs[inputs.length - 1].focus();
+  });
+
+  // Add text item
+  editor.querySelector('.add-text-btn').addEventListener('click', () => {
+    if (!project.images) project.images = [];
+    project.images.push({ type: 'text', heading: '', body: '' });
+    markDirty();
+    refreshImages(editor, project, item);
+    const inputs = editor.querySelectorAll('.img-heading-input');
+    if (inputs.length) inputs[inputs.length - 1].focus();
+  });
+
+  // Init image drag-drop
+  initImageDragDrop(editor, project, item);
+}
+
+function refreshImages(editor, project, item) {
+  const list = editor.querySelector('.images-list');
+  const header = editor.querySelector('.images-columns');
+  const images = project.images || [];
+
+  // Rebuild column headers if needed
+  if (header) header.remove();
+
+  // Rebuild list
+  const hasImages = images.some(i => i.type !== 'text');
+  list.innerHTML = images.map((img, i) => {
+    if (img.type === 'text') {
+      return `
+        <div class="image-item image-item--text" data-idx="${i}" draggable="true">
+          <span class="drag-handle" title="Drag to reorder">⠿</span>
+          <span class="image-item__type-badge">Text</span>
+          <input type="text" class="img-heading-input" value="${esc(img.heading || '')}" placeholder="Heading (optional)" data-idx="${i}" style="flex:1" />
+          <input type="text" class="img-body-input image-item__caption" value="${esc(img.body || '')}" placeholder="Body text" data-idx="${i}" />
+          <button class="btn btn--icon btn--small btn--icon-danger remove-image-btn" data-idx="${i}" title="Remove">✕</button>
+        </div>`;
+    }
+    return `
+      <div class="image-item" data-idx="${i}" draggable="true">
+        <span class="drag-handle" title="Drag to reorder">⠿</span>
+        <input type="text" class="img-src-input" value="${esc(img.src || '')}" placeholder="images/…/filename.jpg" data-idx="${i}" />
+        <textarea class="img-caption-input image-item__caption" placeholder="Caption (optional)" data-idx="${i}">${esc(img.caption || '')}</textarea>
+        <button class="btn btn--icon btn--small btn--icon-danger remove-image-btn" data-idx="${i}" title="Remove">✕</button>
+      </div>`;
+  }).join('');
+
+  // Re-inject column headers (only when there are photo rows)
+  if (hasImages) {
+    const cols = document.createElement('div');
+    cols.className = 'images-columns';
+    cols.innerHTML = '<span>File path</span><span>Caption</span><span></span>';
+    list.insertAdjacentElement('beforebegin', cols);
+  }
+
+  updateMeta(item, project);
+  initImageDragDrop(editor, project, item);
+}
+
+function updateMeta(item, project) {
+  const all       = project.images || [];
+  const photoCount = all.filter(i => i.type !== 'text').length;
+  const textCount  = all.filter(i => i.type === 'text').length;
+  const parts = [project.year || ''];
+  if (photoCount) parts.push(`${photoCount} photo${photoCount !== 1 ? 's' : ''}`);
+  if (textCount)  parts.push(`${textCount} text item${textCount !== 1 ? 's' : ''}`);
+  item.querySelector('.project-item-meta').textContent = parts.join(' · ');
+}
+
+// ══════════════════════════════════════════════════════════════
+// Modal (image picker)
+// ══════════════════════════════════════════════════════════════
+function openModal(title, files, project, callback, opts = {}) {
+  document.getElementById('modal-title').textContent = title;
+  const body = document.getElementById('modal-body');
+  modalCallback = callback;
+
+  // Select All button — only in multi-select mode
+  const selectAllBtn = document.getElementById('modal-select-all-btn');
+  if (opts.multiSelect) {
+    selectAllBtn.style.display = '';
+    selectAllBtn.textContent = 'Select All';
+    selectAllBtn.onclick = () => {
+      const items = body.querySelectorAll('.file-item:not(.already-added)');
+      const allSelected = [...items].every(el => el.classList.contains('selected'));
+      items.forEach(el => el.classList.toggle('selected', !allSelected));
+      selectAllBtn.textContent = allSelected ? 'Select All' : 'Deselect All';
+    };
+  } else {
+    selectAllBtn.style.display = 'none';
+  }
+
+  if (files.length === 0) {
+    body.innerHTML = `<div class="modal-empty">No image files found in <code>${imgFolder(project)}/</code>.<br>Add your JPEGs there first, then try again.</div>`;
+    document.getElementById('modal-confirm-btn').style.display = 'none';
+  } else {
+    document.getElementById('modal-confirm-btn').style.display = '';
+    const existingPaths = new Set((project.images || []).map(i => i.src));
+
+    body.innerHTML = `<div class="file-grid" id="file-grid"></div>`;
+    const grid = body.querySelector('#file-grid');
+
+    files.forEach(({ name, handle }) => {
+      const src = `${imgFolder(project)}/${name}`;
+      const alreadyAdded = !opts.coverMode && existingPaths.has(src);
+
+      const cell = document.createElement('div');
+      cell.className = 'file-item' + (alreadyAdded ? ' already-added' : '');
+      cell.dataset.name = name;
+      cell.innerHTML = `
+        <div style="background:#f2f2f2;aspect-ratio:1;display:flex;align-items:center;justify-content:center;">
+          <img data-handle-src="pending" alt="${esc(name)}" style="width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity 0.2s" />
+        </div>
+        <div class="file-item__name">${esc(name)}</div>
+        <div class="check">
+          <svg viewBox="0 0 10 10" fill="none"><path d="M2 5l2.5 2.5L8 3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+      `;
+
+      // Load thumbnail
+      const img = cell.querySelector('img');
+      getImageObjectURL(handle).then(url => {
+        if (url) { img.src = url; img.onload = () => { img.style.opacity = '1'; }; }
+      });
+
+      if (!alreadyAdded) {
+        cell.addEventListener('click', () => {
+          if (opts.coverMode) {
+            grid.querySelectorAll('.file-item').forEach(el => el.classList.remove('selected'));
+          }
+          cell.classList.toggle('selected');
+        });
+      }
+
+      grid.appendChild(cell);
+    });
+  }
+
+  document.getElementById('modal-overlay').style.display = 'flex';
+}
+
+function closeModal() {
+  document.getElementById('modal-overlay').style.display = 'none';
+  modalCallback = null;
+}
+
+function confirmModal() {
+  const selected = [...document.querySelectorAll('.file-item.selected')].map(el => el.dataset.name);
+  const cb = modalCallback; // save before closeModal() clears it
+  closeModal();
+  if (cb) cb(selected);
+}
+
+// ══════════════════════════════════════════════════════════════
+// New project
+// ══════════════════════════════════════════════════════════════
+function toggleNewProjectForm() {
+  const form = document.getElementById('new-project-form');
+  const isOpen = form.classList.contains('open');
+  form.classList.toggle('open', !isOpen);
+  if (!isOpen) {
+    document.getElementById('new-title').focus();
+    document.getElementById('new-year').value = new Date().getFullYear();
+  } else {
+    document.getElementById('new-title').value = '';
+    document.getElementById('new-id').value = '';
+  }
+}
+
+function createProject() {
+  const title = document.getElementById('new-title').value.trim();
+  const id = document.getElementById('new-id').value.trim();
+  const year = document.getElementById('new-year').value.trim();
+
+  if (!title) { showToast('Please enter a title.', true); return; }
+  if (!id) { showToast('Please enter an ID.', true); return; }
+  if (!/^[a-z0-9-]+$/.test(id)) { showToast('ID must be lowercase with hyphens only.', true); return; }
+  if (data.projects.find(p => p.id === id)) { showToast(`ID "${id}" already exists.`, true); return; }
+
+  const newProject = {
+    id,
+    title,
+    year: year || String(new Date().getFullYear()),
+    description: '',
+    cover: `images/${id}/cover.jpg`,
+    images: []
+  };
+
+  data.projects.push(newProject);
+  markDirty();
+  openProjectId = id;
+  toggleNewProjectForm();
+  renderProjects();
+
+  // Scroll to new project
+  setTimeout(() => {
+    const el = document.querySelector(`[data-id="${id}"]`);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 50);
+
+  showToast(`Project "${title}" created. Add your images to images/${id}/.`);
+}
+
+// ══════════════════════════════════════════════════════════════
+// Drag & drop — projects
+// ══════════════════════════════════════════════════════════════
+function initProjectDragDrop() {
+  const list = document.getElementById('projects-list');
+  let dragSrc = null;
+
+  list.querySelectorAll('.project-item').forEach(item => {
+    const handle = item.querySelector('.drag-handle');
+
+    handle.addEventListener('mousedown', () => { item.setAttribute('draggable', 'true'); });
+    handle.addEventListener('mouseup', () => { item.setAttribute('draggable', 'false'); });
+
+    item.addEventListener('dragstart', e => {
+      dragSrc = item;
+      item.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+    });
+    item.addEventListener('dragend', () => {
+      dragSrc = null;
+      item.classList.remove('dragging');
+      list.querySelectorAll('.project-item').forEach(el => el.classList.remove('drag-over'));
+    });
+    item.addEventListener('dragover', e => {
+      e.preventDefault();
+      if (item !== dragSrc) {
+        list.querySelectorAll('.project-item').forEach(el => el.classList.remove('drag-over'));
+        item.classList.add('drag-over');
+      }
+    });
+    item.addEventListener('drop', e => {
+      e.preventDefault();
+      if (!dragSrc || dragSrc === item) return;
+      const srcId = dragSrc.dataset.id;
+      const tgtId = item.dataset.id;
+      const srcIdx = data.projects.findIndex(p => p.id === srcId);
+      const tgtIdx = data.projects.findIndex(p => p.id === tgtId);
+      const [moved] = data.projects.splice(srcIdx, 1);
+      data.projects.splice(tgtIdx, 0, moved);
+      markDirty();
+      renderProjects();
+    });
+  });
+}
+
+// ══════════════════════════════════════════════════════════════
+// Drag & drop — images within a project
+// ══════════════════════════════════════════════════════════════
+function initImageDragDrop(editor, project, item) {
+  const list = editor.querySelector('.images-list');
+  let dragSrc = null;
+
+  list.querySelectorAll('.image-item').forEach(row => {
+    const handle = row.querySelector('.drag-handle');
+
+    handle.addEventListener('mousedown', () => { row.setAttribute('draggable', 'true'); });
+    handle.addEventListener('mouseup', () => { row.setAttribute('draggable', 'false'); });
+
+    row.addEventListener('dragstart', e => {
+      dragSrc = row;
+      row.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+    });
+    row.addEventListener('dragend', () => {
+      dragSrc = null;
+      row.classList.remove('dragging');
+      list.querySelectorAll('.image-item').forEach(el => el.classList.remove('drag-over'));
+    });
+    row.addEventListener('dragover', e => {
+      e.preventDefault();
+      if (row !== dragSrc) {
+        list.querySelectorAll('.image-item').forEach(el => el.classList.remove('drag-over'));
+        row.classList.add('drag-over');
+      }
+    });
+    row.addEventListener('drop', e => {
+      e.preventDefault();
+      if (!dragSrc || dragSrc === row) return;
+      const srcIdx = parseInt(dragSrc.dataset.idx);
+      const tgtIdx = parseInt(row.dataset.idx);
+      const [moved] = project.images.splice(srcIdx, 1);
+      project.images.splice(tgtIdx, 0, moved);
+      markDirty();
+      refreshImages(editor, project, item);
+    });
+  });
+}
+
+// ══════════════════════════════════════════════════════════════
+// Utilities
+// ══════════════════════════════════════════════════════════════
+function slugify(str) {
+  return str.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+}
+
+function esc(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+let toastTimer;
+function showToast(msg, isError = false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (isError ? ' error' : '');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { t.classList.remove('show'); }, 3000);
+}
+</script>
+</body>
+</html>

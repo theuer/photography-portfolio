@@ -1,0 +1,69 @@
+{
+  "site": {
+    "name": "Alex Morgan",
+    "description": "Alex Morgan is a photographer based in New York, USA."
+  },
+  "about": {
+    "text": "b. 1990, Chicago, USA\nLives and works in New York, USA.\n\nAlex Morgan is a documentary photographer whose work explores urban landscapes and the people who inhabit them.\n\nRepresented by Example Gallery, New York.",
+    "image": "images/about.jpg",
+    "links": [
+      {
+        "label": "Instagram",
+        "url": "https://www.instagram.com/yourhandle"
+      },
+      {
+        "label": "Mail",
+        "url": "mailto:hello@example.com"
+      }
+    ]
+  },
+  "projects": [
+    {
+      "id": "first-project",
+      "title": "First Project",
+      "year": "2024",
+      "category": "Ongoing",
+      "description": "A short description of this project. What it is about, where it was made.",
+      "cover": "images/first-project/cover.jpg",
+      "coverPosition": "center center",
+      "images": [
+        {
+          "src": "images/first-project/001.jpg",
+          "caption": "Location, Year"
+        },
+        {
+          "src": "images/first-project/002.jpg",
+          "caption": ""
+        },
+        {
+          "type": "text",
+          "heading": "Optional heading",
+          "body": "An optional text block between images. Can be used for quotes, notes or chapter breaks."
+        },
+        {
+          "src": "images/first-project/003.jpg",
+          "caption": ""
+        }
+      ]
+    },
+    {
+      "id": "second-project",
+      "title": "Second Project",
+      "year": "2022-2023",
+      "category": "Finished",
+      "description": "",
+      "cover": "images/second-project/cover.jpg",
+      "coverPosition": "center center",
+      "images": [
+        {
+          "src": "images/second-project/001.jpg",
+          "caption": ""
+        },
+        {
+          "src": "images/second-project/002.jpg",
+          "caption": ""
+        }
+      ]
+    }
+  ]
+}

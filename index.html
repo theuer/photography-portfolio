@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Photography Portfolio</title>
+  <meta name="description" content="A photography portfolio." />
+  <meta property="og:title" content="Photography Portfolio" />
+  <meta property="og:description" content="A photography portfolio." />
+  <meta property="og:type" content="website" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <!-- ══════════════════════════════════════════════════════════
+       Header
+  ══════════════════════════════════════════════════════════ -->
+  <header class="site-header">
+    <div class="site-header__inner">
+      <div class="site-name">
+        <a href="/" id="site-name-link"></a>
+      </div>
+      <nav class="site-nav">
+        <a href="/" class="site-nav__link site-nav__link--active">Work</a>
+        <a href="/about" class="site-nav__link">About</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- ══════════════════════════════════════════════════════════
+       Main
+  ══════════════════════════════════════════════════════════ -->
+  <main class="page-content">
+    <section class="grid-section" id="grid-section">
+      <div class="loading-state" id="loading">Loading&hellip;</div>
+    </section>
+  </main>
+
+  <!-- ══════════════════════════════════════════════════════════
+       Footer
+  ══════════════════════════════════════════════════════════ -->
+  <footer class="site-footer">
+    <span class="site-footer__copy" id="footer-copy"></span>
+  </footer>
+
+  <script>
+    // ─── Load projects ───────────────────────────────────────
+    fetch('data/projects.json')
+      .then(r => r.json())
+      .then(data => {
+        const { site, projects } = data;
+
+        document.title = site.name;
+        document.getElementById('site-name-link').textContent = site.name;
+        document.getElementById('footer-copy').textContent =
+          `\u00A9 ${new Date().getFullYear()} ${site.name}`;
+
+        // Update meta/OG tags from site data
+        if (site.description) {
+          document.querySelector('meta[name="description"]').setAttribute('content', site.description);
+          document.querySelector('meta[property="og:description"]').setAttribute('content', site.description);
+        }
+        document.querySelector('meta[property="og:title"]').setAttribute('content', site.name);
+
+        const section = document.getElementById('grid-section');
+        section.innerHTML = '';
+
+        // ── Group projects by category (preserve JSON order) ──
+        const grouped = new Map(); // category string → [project, ...]
+        projects.forEach(p => {
+          const cat = (p.category || '').trim();
+          if (!grouped.has(cat)) grouped.set(cat, []);
+          grouped.get(cat).push(p);
+        });
+
+        // ── Render one section per category ──────────────────
+        let cardIndex = 0;
+        grouped.forEach((group, category) => {
+          const categorySection = document.createElement('div');
+          categorySection.className = 'category-section';
+
+          if (category) {
+            const label = document.createElement('h2');
+            label.className = 'category-label';
+            label.textContent = category;
+            categorySection.appendChild(label);
+          }
+
+          const grid = document.createElement('div');
+          grid.className = 'projects-grid';
+
+          group.forEach(project => {
+            const card = document.createElement('a');
+            card.className = 'project-card fade-in';
+            card.href = `/work/${encodeURIComponent(project.slug || project.id)}`;
+            card.setAttribute('aria-label', project.title);
+            card.innerHTML = `
+              <div class="project-card__image-wrap">
+                <img src="${escapeHTML(project.cover)}"
+                     alt="${escapeHTML(project.title)}"
+                     loading="lazy"
+                     style="object-position:${escapeHTML(project.coverPosition || 'center center')}" />
+              </div>
+              <div class="project-card__meta">
+                <span class="project-card__title">${escapeHTML(project.title)}</span>
+                <span class="project-card__year">${escapeHTML(String(project.year))}</span>
+              </div>
+            `;
+
+            // Image load / error — always attach listener first, then check complete
+            const img = card.querySelector('img');
+            img.addEventListener('load', () => img.classList.add('loaded'));
+            img.addEventListener('error', () => {
+              img.closest('.project-card__image-wrap').classList.add('placeholder');
+              img.style.display = 'none';
+            });
+            if (img.complete && img.naturalWidth) img.classList.add('loaded');
+
+            // Staggered fade-in
+            card.style.transitionDelay = `${cardIndex * 40}ms`;
+            cardIndex++;
+
+            grid.appendChild(card);
+          });
+
+          categorySection.appendChild(grid);
+          section.appendChild(categorySection);
+        });
+
+        // ── Intersection observer for fade-in ────────────────
+        const observer = new IntersectionObserver(entries => {
+          entries.forEach(entry => {
+            if (entry.isIntersecting) {
+              entry.target.classList.add('visible');
+              observer.unobserve(entry.target);
+            }
+          });
+        }, { threshold: 0.05 });
+
+        section.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+      })
+      .catch(err => {
+        document.getElementById('loading').textContent =
+          'Could not load projects. Make sure you are running this from a web server.';
+        console.error(err);
+      });
+
+    // ─── Utility ─────────────────────────────────────────────
+    function escapeHTML(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+  </script>
+</body>
+</html>

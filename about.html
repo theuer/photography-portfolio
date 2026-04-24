@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>About</title>
+  <meta name="description" content="A photography portfolio." />
+  <meta property="og:title" content="About" />
+  <meta property="og:description" content="A photography portfolio." />
+  <meta property="og:type" content="website" />
+  <link rel="stylesheet" href="/css/style.css" />
+  <style>
+    .about-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 64px;
+      padding: 64px var(--page-padding) 80px;
+      max-width: 1000px;
+    }
+
+    .about-text p {
+      font-size: 13px;
+      line-height: 1.75;
+      color: var(--color-text);
+      margin-bottom: 1em;
+    }
+
+    .about-text p:last-of-type { margin-bottom: 0; }
+
+    .about-links {
+      margin-top: 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .about-links a {
+      font-size: 13px;
+      color: var(--color-muted);
+      text-decoration: none;
+      transition: color 0.15s;
+    }
+
+    .about-links a:hover { color: var(--color-text); }
+
+    .about-image img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    @media (max-width: 700px) {
+      .about-layout {
+        grid-template-columns: 1fr;
+        gap: 40px;
+        padding-top: 40px;
+      }
+      .about-image { order: -1; }
+    }
+  </style>
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="site-header__inner">
+      <div class="site-name">
+        <a href="/" id="site-name-link"></a>
+      </div>
+      <nav class="site-nav">
+        <a href="/" class="site-nav__link">Work</a>
+        <a href="/about" class="site-nav__link site-nav__link--active">About</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="page-content">
+    <div class="about-layout" id="about-layout">
+      <div class="about-text" id="about-text"></div>
+      <div class="about-image" id="about-image" style="display:none">
+        <img id="about-img" src="" alt="" />
+      </div>
+    </div>
+  </main>
+
+  <script>
+    fetch('/data/projects.json')
+      .then(r => r.json())
+      .then(data => {
+        document.title = `About — ${data.site.name}`;
+        document.getElementById('site-name-link').textContent = data.site.name;
+
+        // Update meta/OG tags from site data
+        if (data.site.description) {
+          document.querySelector('meta[name="description"]').setAttribute('content', data.site.description);
+          document.querySelector('meta[property="og:description"]').setAttribute('content', data.site.description);
+        }
+        document.querySelector('meta[property="og:title"]').setAttribute('content', `About — ${data.site.name}`);
+
+        const about = data.about || {};
+
+        // Text
+        const textEl = document.getElementById('about-text');
+        if (about.text) {
+          textEl.innerHTML = about.text
+            .split(/\n\n+/)
+            .filter(p => p.trim())
+            .map(p => `<p>${esc(p).replace(/\n/g, '<br>')}</p>`)
+            .join('');
+        }
+
+        // Links
+        if (about.links && about.links.length) {
+          const linksDiv = document.createElement('div');
+          linksDiv.className = 'about-links';
+          about.links.forEach(link => {
+            const a = document.createElement('a');
+            a.href = link.url;
+            a.textContent = link.label;
+            a.target = '_blank';
+            a.rel = 'noopener noreferrer';
+            linksDiv.appendChild(a);
+          });
+          textEl.appendChild(linksDiv);
+        }
+
+        // Image
+        if (about.image) {
+          const imgWrap = document.getElementById('about-image');
+          const img = document.getElementById('about-img');
+          const src = about.image.startsWith('/') ? about.image : '/' + about.image;
+          img.src = src;
+          img.alt = data.site.name;
+          imgWrap.style.display = 'block';
+        } else {
+          // Single column if no image
+          document.querySelector('.about-layout').style.gridTemplateColumns = '1fr';
+          document.querySelector('.about-layout').style.maxWidth = '520px';
+        }
+      })
+      .catch(() => {
+        document.getElementById('about-text').textContent =
+          'Could not load page. Make sure you are running this from a web server.';
+      });
+
+    function esc(str) {
+      return String(str)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+  </script>
+</body>
+</html>
