@@ -63,13 +63,20 @@ After editing, click **Save** to write changes to `data/projects.json`.
 
 ### Apache (shared hosting)
 
-Upload all files except:
+Upload these files and folders:
 
-- `admin.html` (local editing tool, should stay private)
-- `data/projects.json` (your real content — upload manually or via FTP)
-- `images/` (your real photos — upload manually or via FTP)
-- `.claude/` (development tooling)
-- `node_modules/`
+- `index.html`, `about.html`, `project.html`
+- `css/`
+- `data/projects.json`
+- `images/`
+- `.htaccess`
+
+Do **not** upload:
+
+- `admin.html` — local editing tool, should stay private
+- `data/projects.example.json` — template only, not needed on the server
+- `serve.json` — local dev server config only
+- `.claude/`, `node_modules/`, `README.md`
 
 The included `.htaccess` handles URL rewrites for clean paths (`/work/project-id`, `/about`).
 
